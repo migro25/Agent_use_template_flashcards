@@ -4,8 +4,10 @@ const germanInput = document.getElementById("german-word");
 const formMessage = document.getElementById("form-message");
 const wordList = document.getElementById("word-list");
 const practiceCard = document.getElementById("practice-card");
+const nextCardButton = document.getElementById("next-card");
 
 const wordPairs = [];
+let currentWordPairIndex = 0;
 let isGermanVisible = false;
 
 // Loads saved word pairs from the browser.
@@ -59,11 +61,13 @@ function showPracticeCard() {
   if (wordPairs.length === 0) {
     practiceCard.textContent = "Noch keine Wortpaare zum Üben.";
     practiceCard.disabled = true;
+    nextCardButton.disabled = true;
     return;
   }
 
-  practiceCard.textContent = wordPairs[0].english;
+  practiceCard.textContent = wordPairs[currentWordPairIndex].english;
   practiceCard.disabled = false;
+  nextCardButton.disabled = false;
 }
 
 // Reveals or hides the German side of the practice card.
@@ -75,16 +79,34 @@ function flipPracticeCard() {
   isGermanVisible = !isGermanVisible;
 
   if (isGermanVisible) {
-    practiceCard.textContent = wordPairs[0].german;
+    practiceCard.textContent = wordPairs[currentWordPairIndex].german;
   } else {
-    practiceCard.textContent = wordPairs[0].english;
+    practiceCard.textContent = wordPairs[currentWordPairIndex].english;
   }
+}
+
+// Shows a random word pair different from the current one.
+function showNextPracticeCard() {
+  if (wordPairs.length < 2) {
+    showPracticeCard();
+    return;
+  }
+
+  let nextIndex = Math.floor(Math.random() * (wordPairs.length - 1));
+
+  if (nextIndex >= currentWordPairIndex) {
+    nextIndex++;
+  }
+
+  currentWordPairIndex = nextIndex;
+  showPracticeCard();
 }
 
 // Deletes a word pair from the list.
 function deleteWordPair(event) {
   const index = Number(event.target.dataset.index);
   wordPairs.splice(index, 1);
+  currentWordPairIndex = 0;
 
   saveWordPairs();
   showWordPairs();
@@ -108,6 +130,7 @@ function addWordPair(event) {
     english: englishWord,
     german: germanWord
   });
+  currentWordPairIndex = 0;
 
   saveWordPairs();
   showWordPairs();
@@ -119,4 +142,5 @@ function addWordPair(event) {
 
 wordForm.addEventListener("submit", addWordPair);
 practiceCard.addEventListener("click", flipPracticeCard);
+nextCardButton.addEventListener("click", showNextPracticeCard);
 loadWordPairs();
