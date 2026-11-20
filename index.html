@@ -3,10 +3,50 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Flashcards</title>
+  <title>Return to Sport – Lauftagebuch</title>
   <link rel="stylesheet" href="style.css">
   <script src="script.js" defer></script>
 </head>
 <body>
+  <main class="container">
+    <header class="page-header">
+      <h1>Return to Sport</h1>
+      <p>Dein Lauftagebuch für Kilometer und Schmerzwerte.</p>
+    </header>
+
+    <section class="panel" aria-labelledby="run-form-heading">
+      <h2 id="run-form-heading">Lauf eintragen</h2>
+      <form id="run-form">
+        <label for="run-date">Datum</label>
+        <input type="date" id="run-date" name="date" required>
+
+        <label for="run-time">Uhrzeit</label>
+        <input type="time" id="run-time" name="time" required>
+
+        <label for="run-distance">Distanz (km)</label>
+        <input type="number" id="run-distance" name="distance" min="0.01" step="0.01" required>
+
+        <label for="pain-level">Schmerzen (1–10)</label>
+        <input type="number" id="pain-level" name="pain" min="1" max="10" step="1" required>
+        <p class="hint">1 = wenig, 10 = sehr stark. Farbgruppen: 1–3 grün, 4–6 gelb, 7–10 rot.</p>
+        <output id="pain-indicator" class="pain-indicator neutral" aria-live="polite">
+          Schmerzfarbe wird nach Eingabe angezeigt.
+        </output>
+
+        <button type="submit">Lauf speichern</button>
+      </form>
+    </section>
+
+    <section class="panel" aria-labelledby="weekly-heading">
+      <h2 id="weekly-heading">Wochenübersicht</h2>
+      <p id="current-week-total" class="current-total" aria-live="polite">Diese Woche: 0 km</p>
+      <ul id="weekly-summary" class="summary-list"></ul>
+    </section>
+
+    <section class="panel" aria-labelledby="run-history-heading">
+      <h2 id="run-history-heading">Deine Läufe</h2>
+      <ul id="run-list" class="run-list"></ul>
+    </section>
+  </main>
 </body>
 </html>

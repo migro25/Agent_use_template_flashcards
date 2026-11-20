@@ -4,7 +4,175 @@
 
 body {
   margin: 0;
+  padding: 24px 16px;
+  color: #202a31;
+  background-color: #f3f6f5;
   font-family: Arial, sans-serif;
-  color: #222;
+  line-height: 1.5;
+}
+
+.container {
+  max-width: 680px;
+  margin: 0 auto;
+}
+
+.page-header {
+  margin-bottom: 24px;
+}
+
+.page-header h1 {
+  margin-bottom: 4px;
+  color: #174b3a;
+}
+
+.page-header p,
+.hint {
+  margin-top: 0;
+  color: #52615b;
+}
+
+.panel {
+  margin-bottom: 20px;
+  padding: 20px;
+  border: 1px solid #d8e1dc;
+  border-radius: 12px;
   background-color: #fff;
+  box-shadow: 0 2px 8px #183a2a12;
+}
+
+.panel h2 {
+  margin-top: 0;
+  color: #174b3a;
+  font-size: 20px;
+}
+
+#run-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+input {
+  width: 100%;
+  margin-bottom: 8px;
+  padding: 10px;
+  border: 1px solid #aebbb4;
+  border-radius: 6px;
+  font-size: 16px;
+}
+
+input:focus {
+  border-color: #247451;
+  outline: 2px solid #24745133;
+}
+
+.hint {
+  margin-bottom: 0;
+  font-size: 14px;
+}
+
+.pain-indicator {
+  display: block;
+  margin: 4px 0 8px;
+  padding: 10px 12px;
+  border-radius: 6px;
+  font-weight: bold;
+}
+
+.pain-indicator.neutral {
+  color: #49544e;
+  background-color: #edf0ee;
+}
+
+.pain-indicator.green {
+  color: #155b32;
+  background-color: #d9f2df;
+}
+
+.pain-indicator.yellow {
+  color: #674d00;
+  background-color: #fff1b8;
+}
+
+.pain-indicator.red {
+  color: #8b1e1e;
+  background-color: #ffdada;
+}
+
+button {
+  padding: 11px 14px;
+  border: 0;
+  border-radius: 6px;
+  color: #fff;
+  background-color: #247451;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #195d3f;
+}
+
+.current-total {
+  margin: 0 0 12px;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.summary-list,
+.run-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.summary-list li,
+.run-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 8px;
+  padding: 10px 12px;
+  border-radius: 6px;
+  background-color: #f3f6f5;
+}
+
+.run-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.pain-badge {
+  flex-shrink: 0;
+  padding: 5px 9px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.pain-badge.green {
+  color: #155b32;
+  background-color: #d9f2df;
+}
+
+.pain-badge.yellow {
+  color: #674d00;
+  background-color: #fff1b8;
+}
+
+.pain-badge.red {
+  color: #8b1e1e;
+  background-color: #ffdada;
+}
+
+@media (max-width: 480px) {
+  body {
+    padding: 16px 12px;
+  }
+
+  .panel {
+    padding: 16px;
+  }
 }
