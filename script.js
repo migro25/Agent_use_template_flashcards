@@ -4,11 +4,14 @@ const germanInput = document.getElementById("german-word");
 const formMessage = document.getElementById("form-message");
 const wordList = document.getElementById("word-list");
 const practiceCard = document.getElementById("practice-card");
+const knownCardButton = document.getElementById("known-card");
 const nextCardButton = document.getElementById("next-card");
+const knownCountText = document.getElementById("known-count");
 
 const wordPairs = [];
 let currentWordPairIndex = 0;
 let isGermanVisible = false;
+let knownCardCount = 0;
 
 // Loads saved word pairs from the browser.
 function loadWordPairs() {
@@ -61,12 +64,14 @@ function showPracticeCard() {
   if (wordPairs.length === 0) {
     practiceCard.textContent = "Noch keine Wortpaare zum Üben.";
     practiceCard.disabled = true;
+    knownCardButton.disabled = true;
     nextCardButton.disabled = true;
     return;
   }
 
   practiceCard.textContent = wordPairs[currentWordPairIndex].english;
   practiceCard.disabled = false;
+  knownCardButton.disabled = false;
   nextCardButton.disabled = false;
 }
 
@@ -100,6 +105,16 @@ function showNextPracticeCard() {
 
   currentWordPairIndex = nextIndex;
   showPracticeCard();
+}
+
+// Counts a word pair marked as known in this session.
+function markCardKnown() {
+  if (wordPairs.length === 0) {
+    return;
+  }
+
+  knownCardCount++;
+  knownCountText.textContent = "I knew it: " + knownCardCount;
 }
 
 // Deletes a word pair from the list.
@@ -142,5 +157,6 @@ function addWordPair(event) {
 
 wordForm.addEventListener("submit", addWordPair);
 practiceCard.addEventListener("click", flipPracticeCard);
+knownCardButton.addEventListener("click", markCardKnown);
 nextCardButton.addEventListener("click", showNextPracticeCard);
 loadWordPairs();
