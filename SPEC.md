@@ -35,6 +35,7 @@ Eine Person, die nach einer Sportpause ihre Läufe dokumentieren möchte.
 - Dateien: `index.html`, `style.css` und `script.js`.
 - Keine Frameworks, Bibliotheken, Node.js, npm oder Build-Tools.
 - Speicherung ausschließlich im Browser mit `localStorage`; kein Server und keine Datenbank.
+- `spec.md` enthält die Projektregeln und darf nicht geändert werden.
 
 ## Darstellung und Umfang
 

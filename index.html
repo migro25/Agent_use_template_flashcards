@@ -12,6 +12,7 @@
     <header class="page-header">
       <h1>Return to Sport</h1>
       <p>Dein Lauftagebuch für Kilometer und Schmerzwerte.</p>
+      <p class="storage-note">Deine Einträge werden lokal in diesem Browser gespeichert, nicht als separate Datei.</p>
     </header>
 
     <section class="panel" aria-labelledby="run-form-heading">
@@ -46,6 +47,14 @@
     <section class="panel" aria-labelledby="run-history-heading">
       <h2 id="run-history-heading">Deine Läufe</h2>
       <ul id="run-list" class="run-list"></ul>
+    </section>
+
+    <section class="panel" aria-labelledby="charts-heading">
+      <h2 id="charts-heading">Deine Grafiken</h2>
+      <h3>Wochenkilometer</h3>
+      <div id="weekly-chart" class="chart" aria-label="Balkendiagramm der Wochenkilometer"></div>
+      <h3>Schmerzverlauf je Lauf</h3>
+      <div id="pain-chart" class="chart" aria-label="Balkendiagramm der Schmerzwerte je Lauf"></div>
     </section>
   </main>
 </body>

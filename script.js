@@ -7,6 +7,8 @@ const painIndicator = document.getElementById("pain-indicator");
 const currentWeekTotal = document.getElementById("current-week-total");
 const weeklySummary = document.getElementById("weekly-summary");
 const runList = document.getElementById("run-list");
+const weeklyChart = document.getElementById("weekly-chart");
+const painChart = document.getElementById("pain-chart");
 
 const runs = [];
 
@@ -95,6 +97,7 @@ function loadRuns() {
 
   showRunHistory();
   showWeeklySummary();
+  showCharts();
 }
 
 // Creates one history item for a run.
@@ -169,6 +172,87 @@ function showWeeklySummary() {
   }
 }
 
+// Creates one labeled horizontal bar for a chart.
+function createChartRow(label, displayValue, percentage, color) {
+  const row = document.createElement("div");
+  const rowLabel = document.createElement("span");
+  const track = document.createElement("div");
+  const bar = document.createElement("div");
+  const value = document.createElement("span");
+
+  row.className = "chart-row";
+  rowLabel.textContent = label;
+  track.className = "chart-track";
+  track.setAttribute("role", "img");
+  track.setAttribute("aria-label", label + ": " + displayValue);
+  bar.className = "chart-bar " + color;
+  bar.style.width = percentage + "%";
+  value.className = "chart-value";
+  value.textContent = displayValue;
+  track.appendChild(bar);
+  row.appendChild(rowLabel);
+  row.appendChild(track);
+  row.appendChild(value);
+  return row;
+}
+
+// Returns the largest weekly distance.
+function getLongestWeekDistance(weekStarts, totals) {
+  let longestWeek = 0;
+
+  for (const weekStart of weekStarts) {
+    if (totals[weekStart] > longestWeek) {
+      longestWeek = totals[weekStart];
+    }
+  }
+
+  return longestWeek;
+}
+
+// Shows each week's distance as a bar relative to the longest week.
+function showWeeklyChart() {
+  const totals = calculateWeeklyTotals();
+  const weekStarts = Object.keys(totals).sort();
+  weeklyChart.textContent = "";
+
+  if (weekStarts.length === 0) {
+    weeklyChart.textContent = "Noch keine Wochenkilometer zum Anzeigen.";
+    return;
+  }
+
+  const longestWeek = getLongestWeekDistance(weekStarts, totals);
+  for (let index = weekStarts.length - 1; index >= 0; index--) {
+    const weekStart = weekStarts[index];
+    const percentage = (totals[weekStart] / longestWeek) * 100;
+    const label = "Ab " + formatDate(weekStart);
+    const value = formatKilometers(totals[weekStart]) + " km";
+    weeklyChart.appendChild(createChartRow(label, value, percentage, "distance"));
+  }
+}
+
+// Shows pain scores in the order runs were entered.
+function showPainChart() {
+  painChart.textContent = "";
+
+  if (runs.length === 0) {
+    painChart.textContent = "Noch keine Schmerzwerte zum Anzeigen.";
+    return;
+  }
+
+  for (const run of runs) {
+    const category = getPainCategory(run.pain);
+    const label = formatDate(run.date) + " " + run.time;
+    const value = run.pain + "/10 · " + category.label;
+    painChart.appendChild(createChartRow(label, value, run.pain * 10, category.color));
+  }
+}
+
+// Refreshes both charts after runs change or load.
+function showCharts() {
+  showWeeklyChart();
+  showPainChart();
+}
+
 // Adds a valid run to the history and saves it.
 function addRun(event) {
   event.preventDefault();
@@ -188,6 +272,7 @@ function addRun(event) {
   saveRuns();
   showRunHistory();
   showWeeklySummary();
+  showCharts();
   runForm.reset();
   setCurrentDateAndTime();
   updatePainIndicator();
