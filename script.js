@@ -46,7 +46,7 @@ function showWordPairs() {
     wordText.textContent = wordPair.english + " - " + wordPair.german;
 
     const deleteButton = document.createElement("button");
-    deleteButton.textContent = "Löschen";
+    deleteButton.textContent = "🗑️ Löschen";
     deleteButton.type = "button";
     deleteButton.dataset.index = index;
     deleteButton.addEventListener("click", deleteWordPair);
