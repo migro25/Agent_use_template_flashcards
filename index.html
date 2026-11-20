@@ -8,5 +8,20 @@
   <script src="script.js" defer></script>
 </head>
 <body>
+  <main class="container">
+    <h1>Vocab Flashcards</h1>
+
+    <form id="word-form">
+      <label for="english-word">English</label>
+      <input type="text" id="english-word" name="english" required>
+
+      <label for="german-word">Deutsch</label>
+      <input type="text" id="german-word" name="german" required>
+
+      <button type="submit">OK</button>
+    </form>
+
+    <p id="form-message" aria-live="polite"></p>
+  </main>
 </body>
 </html>

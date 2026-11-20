@@ -8,3 +8,33 @@ body {
   color: #222;
   background-color: #fff;
 }
+
+.container {
+  max-width: 600px;
+  margin: 40px auto;
+  padding: 0 20px;
+}
+
+#word-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+input {
+  padding: 10px;
+  border: 1px solid #999;
+  border-radius: 4px;
+  font-size: 16px;
+}
+
+button {
+  margin-top: 6px;
+  padding: 10px;
+  border: none;
+  border-radius: 4px;
+  background-color: #2d6cdf;
+  color: #fff;
+  font-size: 16px;
+  cursor: pointer;
+}
