@@ -3,8 +3,10 @@ const englishInput = document.getElementById("english-word");
 const germanInput = document.getElementById("german-word");
 const formMessage = document.getElementById("form-message");
 const wordList = document.getElementById("word-list");
+const practiceCard = document.getElementById("practice-card");
 
 const wordPairs = [];
+let isGermanVisible = false;
 
 // Loads saved word pairs from the browser.
 function loadWordPairs() {
@@ -19,6 +21,7 @@ function loadWordPairs() {
   }
 
   showWordPairs();
+  showPracticeCard();
 }
 
 // Saves all word pairs in the browser.
@@ -49,6 +52,35 @@ function showWordPairs() {
   }
 }
 
+// Shows the English side of the first word pair.
+function showPracticeCard() {
+  isGermanVisible = false;
+
+  if (wordPairs.length === 0) {
+    practiceCard.textContent = "Noch keine Wortpaare zum Üben.";
+    practiceCard.disabled = true;
+    return;
+  }
+
+  practiceCard.textContent = wordPairs[0].english;
+  practiceCard.disabled = false;
+}
+
+// Reveals or hides the German side of the practice card.
+function flipPracticeCard() {
+  if (wordPairs.length === 0) {
+    return;
+  }
+
+  isGermanVisible = !isGermanVisible;
+
+  if (isGermanVisible) {
+    practiceCard.textContent = wordPairs[0].german;
+  } else {
+    practiceCard.textContent = wordPairs[0].english;
+  }
+}
+
 // Deletes a word pair from the list.
 function deleteWordPair(event) {
   const index = Number(event.target.dataset.index);
@@ -56,6 +88,7 @@ function deleteWordPair(event) {
 
   saveWordPairs();
   showWordPairs();
+  showPracticeCard();
   formMessage.textContent = "Wortpaar gelöscht.";
 }
 
@@ -78,10 +111,12 @@ function addWordPair(event) {
 
   saveWordPairs();
   showWordPairs();
+  showPracticeCard();
   formMessage.textContent = "Wortpaar hinzugefügt.";
   wordForm.reset();
   englishInput.focus();
 }
 
 wordForm.addEventListener("submit", addWordPair);
+practiceCard.addEventListener("click", flipPracticeCard);
 loadWordPairs();
