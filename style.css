@@ -50,5 +50,17 @@ h2 {
 }
 
 #word-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
   margin-bottom: 8px;
+}
+
+#word-list li button {
+  flex-shrink: 0;
+  margin-top: 0;
+  padding: 6px 10px;
+  background-color: #b91c1c;
+  font-size: 14px;
 }

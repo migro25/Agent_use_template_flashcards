@@ -10,11 +10,32 @@ const wordPairs = [];
 function showWordPairs() {
   wordList.textContent = "";
 
-  for (const wordPair of wordPairs) {
+  for (let index = 0; index < wordPairs.length; index++) {
+    const wordPair = wordPairs[index];
     const listItem = document.createElement("li");
-    listItem.textContent = wordPair.english + " - " + wordPair.german;
+
+    const wordText = document.createElement("span");
+    wordText.textContent = wordPair.english + " - " + wordPair.german;
+
+    const deleteButton = document.createElement("button");
+    deleteButton.textContent = "Löschen";
+    deleteButton.type = "button";
+    deleteButton.dataset.index = index;
+    deleteButton.addEventListener("click", deleteWordPair);
+
+    listItem.appendChild(wordText);
+    listItem.appendChild(deleteButton);
     wordList.appendChild(listItem);
   }
+}
+
+// Deletes a word pair from the list.
+function deleteWordPair(event) {
+  const index = Number(event.target.dataset.index);
+  wordPairs.splice(index, 1);
+
+  showWordPairs();
+  formMessage.textContent = "Wortpaar gelöscht.";
 }
 
 // Adds a word pair when the form is submitted.
