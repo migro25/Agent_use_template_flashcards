@@ -2,8 +2,20 @@ const wordForm = document.getElementById("word-form");
 const englishInput = document.getElementById("english-word");
 const germanInput = document.getElementById("german-word");
 const formMessage = document.getElementById("form-message");
+const wordList = document.getElementById("word-list");
 
 const wordPairs = [];
+
+// Shows all saved word pairs in the list.
+function showWordPairs() {
+  wordList.textContent = "";
+
+  for (const wordPair of wordPairs) {
+    const listItem = document.createElement("li");
+    listItem.textContent = wordPair.english + " - " + wordPair.german;
+    wordList.appendChild(listItem);
+  }
+}
 
 // Adds a word pair when the form is submitted.
 function addWordPair(event) {
@@ -22,6 +34,7 @@ function addWordPair(event) {
     german: germanWord
   });
 
+  showWordPairs();
   formMessage.textContent = "Wortpaar hinzugefügt.";
   wordForm.reset();
   englishInput.focus();
