@@ -40,4 +40,4 @@
 - Kleine Schritte und nach jedem Schritt committen machen es leicht,
   Änderungen nachzuvollziehen oder zurückzunehmen.
 - Ich habe zwei KI-Tools ausprobiert (Copilot und Claude). Was mir dabei
-  aufgefallen ist: …
+  aufgefallen ist: Claudo Pro Code Opus 5.5 ist echt gut!
