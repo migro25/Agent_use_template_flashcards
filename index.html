@@ -95,8 +95,11 @@
       <p class="hint">Exportiere deine Läufe als Datei, um sie zu sichern oder in einem anderen Browser zu öffnen. Beim Import werden die aktuellen Läufe ersetzt.</p>
       <div class="data-actions">
         <button type="button" id="export-button">Läufe exportieren</button>
-        <label for="import-input">Läufe importieren (.json-Datei)</label>
-        <input type="file" id="import-input" accept=".json,application/json">
+        <div id="drop-zone" class="drop-zone">
+          <p class="drop-zone-text">Datei hierher ziehen oder auswählen</p>
+          <label for="import-input">Läufe importieren (.json-Datei)</label>
+          <input type="file" id="import-input" accept=".json,application/json">
+        </div>
       </div>
     </section>
   </main>

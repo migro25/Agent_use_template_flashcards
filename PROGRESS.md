@@ -28,6 +28,7 @@ Website konnte gut erstellt werden, die Funktionen führte Co-Pilot so aus, wie 
 - Der Schmerz-Wert wird mit einem Schieberegler (1–10) gewählt. Er färbt sich live grün/gelb/rot. Solange er nicht berührt wurde, ist er grau und das Formular lässt sich nicht speichern (`choosePain`, `resetPainChoice`).
 - Beschädigte gespeicherte Daten legen die Seite nicht mehr lahm: Ungültige Einträge werden übersprungen, die Originaldaten werden unter `runs-backup` gesichert und es erscheint eine Meldung (`readRunsFromStorage`, `backupBrokenData`).
 - Auf dem Handy stehen Schmerz-Badge und Buttons unter dem Lauftext, damit der Text Platz hat.
+- Upload per Drag & Drop: Unter „Daten sichern“ kann man die exportierte `.json`-Datei auf eine gestrichelte Fläche ziehen, statt sie über „Datei auswählen“ zu suchen. Die Fläche wird beim Drüberziehen grün umrandet. Die Datei wird genauso geprüft wie beim normalen Import (`importDroppedFile`, `readImportFile`).
 
 ## Next
 was könnte man verbessern? was wären noch hilfreiche Features?
@@ -63,6 +64,9 @@ Sechster Schritt (mit Claude) – erledigt, siehe Done:
 - Schmerz als Schieberegler
 - Seite stürzt bei kaputtem Speicher nicht mehr ab
 
+Siebter Schritt (mit Claude) – erledigt, siehe Done:
+- Daten per Drag & Drop hochladen
+
 Weitere Ideen für später:
 - Strava-Anbindung, damit Läufe automatisch kommen und man nur den Schmerz einträgt. Eine echte automatische Synchronisierung braucht einen Server, weil Strava ein geheimes Client Secret verlangt, das nicht in öffentliches HTML/JS darf. Das passt nicht zur SPEC (kein Server, keine Synchronisierung). Ohne Server ginge ein Import der Datei `activities.csv` aus dem Strava-Datenexport; danach trägt man bei jedem Lauf nur noch den Schmerz nach.
 - „Rückgängig“ nach dem Löschen statt Nachfrage
@@ -75,8 +79,6 @@ Weitere Ideen für später:
 - Schmerz am Folgetag erfassen (weicht von der SPEC ab)
 - Erinnerung an den letzten Export
 - Tippfehler im README korrigieren („ode ein“ → „oder in“)
-
-
 
 
 ## Decisions & notes

@@ -16,6 +16,7 @@ const weeklyChart = document.getElementById("weekly-chart");
 const painChart = document.getElementById("pain-chart");
 const exportButton = document.getElementById("export-button");
 const importInput = document.getElementById("import-input");
+const dropZone = document.getElementById("drop-zone");
 const runFormHeading = document.getElementById("run-form-heading");
 const submitButton = document.getElementById("submit-button");
 const cancelEditButton = document.getElementById("cancel-edit-button");
@@ -801,6 +802,15 @@ function handleImportedText(fileText) {
   }
 }
 
+// Reads the text of a file and passes it on to the import check.
+function readImportFile(file) {
+  const reader = new FileReader();
+  reader.addEventListener("load", function () {
+    handleImportedText(reader.result);
+  });
+  reader.readAsText(file);
+}
+
 // Reads the file the user picked for the import.
 function importRuns() {
   const file = importInput.files[0];
@@ -808,12 +818,32 @@ function importRuns() {
     return;
   }
 
-  const reader = new FileReader();
-  reader.addEventListener("load", function () {
-    handleImportedText(reader.result);
-  });
-  reader.readAsText(file);
+  readImportFile(file);
   importInput.value = "";
+}
+
+// Highlights the drop zone while a file is dragged over it.
+function showDropHighlight(event) {
+  // Without preventDefault the browser would open the file instead.
+  event.preventDefault();
+  dropZone.classList.add("drag-over");
+}
+
+// Removes the highlight when the file leaves the drop zone.
+function hideDropHighlight() {
+  dropZone.classList.remove("drag-over");
+}
+
+// Imports the file that was dropped on the drop zone.
+function importDroppedFile(event) {
+  event.preventDefault();
+  hideDropHighlight();
+  const file = event.dataTransfer.files[0];
+  if (file === undefined) {
+    return;
+  }
+
+  readImportFile(file);
 }
 
 runForm.addEventListener("submit", saveRunFromForm);
@@ -823,6 +853,9 @@ painInput.addEventListener("pointerdown", choosePain);
 cancelEditButton.addEventListener("click", cancelEditing);
 exportButton.addEventListener("click", exportRuns);
 importInput.addEventListener("change", importRuns);
+dropZone.addEventListener("dragover", showDropHighlight);
+dropZone.addEventListener("dragleave", hideDropHighlight);
+dropZone.addEventListener("drop", importDroppedFile);
 setCurrentDateAndTime();
 resetPainChoice();
 loadRuns();

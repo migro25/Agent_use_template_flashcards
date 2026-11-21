@@ -620,6 +620,33 @@ button:active {
   margin-top: 12px;
 }
 
+.drop-zone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 20px 16px;
+  border: 2px dashed var(--border);
+  border-radius: 12px;
+  background: var(--surface-muted);
+  text-align: center;
+  transition: border-color 0.2s, background-color 0.2s;
+}
+
+.drop-zone-text {
+  margin: 0;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+/* While a file is dragged over the area */
+.drop-zone.drag-over {
+  border-color: var(--accent);
+  background: var(--surface);
+}
+
 /* ---------- Small screens ---------- */
 @media (max-width: 480px) {
   body {
