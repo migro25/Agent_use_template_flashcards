@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light dark">
   <title>Return to Sport – Lauftagebuch</title>
   <link rel="stylesheet" href="style.css">
   <script src="script.js" defer></script>
@@ -10,10 +11,31 @@
 <body>
   <main class="container">
     <header class="page-header">
+      <p class="eyebrow">Lauftagebuch</p>
       <h1>Return to Sport</h1>
       <p>Dein Lauftagebuch für Kilometer und Schmerzwerte.</p>
       <p class="storage-note">Deine Einträge werden lokal in diesem Browser gespeichert, nicht als separate Datei.</p>
     </header>
+
+    <section class="stats" aria-label="Kennzahlen">
+      <div class="stat-card">
+        <span class="stat-label">Diese Woche</span>
+        <span id="stat-current-week" class="stat-value" aria-live="polite">0 km</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Läufe gesamt</span>
+        <span id="stat-run-count" class="stat-value">0</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Ø Schmerz (4 Wo.)</span>
+        <span id="stat-average-pain" class="stat-value">–</span>
+        <span id="stat-average-pain-label" class="pain-badge neutral">keine Läufe</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Längster Lauf</span>
+        <span id="stat-longest-run" class="stat-value">–</span>
+      </div>
+    </section>
 
     <section class="panel" aria-labelledby="run-form-heading">
       <h2 id="run-form-heading">Lauf eintragen</h2>
@@ -44,7 +66,6 @@
 
     <section class="panel" aria-labelledby="weekly-heading">
       <h2 id="weekly-heading">Wochenübersicht</h2>
-      <p id="current-week-total" class="current-total" aria-live="polite">Diese Woche: 0 km</p>
       <ul id="weekly-summary" class="summary-list"></ul>
     </section>
 
@@ -56,9 +77,9 @@
     <section class="panel" aria-labelledby="charts-heading">
       <h2 id="charts-heading">Deine Grafiken</h2>
       <h3>Wochenkilometer</h3>
-      <div id="weekly-chart" class="chart" aria-label="Balkendiagramm der Wochenkilometer"></div>
+      <div id="weekly-chart" class="chart" aria-label="Säulendiagramm der Wochenkilometer"></div>
       <h3>Schmerzverlauf je Lauf</h3>
-      <div id="pain-chart" class="chart" aria-label="Balkendiagramm der Schmerzwerte je Lauf"></div>
+      <div id="pain-chart" class="chart" aria-label="Säulendiagramm der Schmerzwerte je Lauf"></div>
     </section>
 
     <section class="panel" aria-labelledby="data-heading">

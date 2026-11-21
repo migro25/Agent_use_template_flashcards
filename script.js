@@ -5,7 +5,11 @@ const distanceInput = document.getElementById("run-distance");
 const painInput = document.getElementById("pain-level");
 const noteInput = document.getElementById("run-note");
 const painIndicator = document.getElementById("pain-indicator");
-const currentWeekTotal = document.getElementById("current-week-total");
+const statCurrentWeek = document.getElementById("stat-current-week");
+const statRunCount = document.getElementById("stat-run-count");
+const statAveragePain = document.getElementById("stat-average-pain");
+const statAveragePainLabel = document.getElementById("stat-average-pain-label");
+const statLongestRun = document.getElementById("stat-longest-run");
 const weeklySummary = document.getElementById("weekly-summary");
 const runList = document.getElementById("run-list");
 const weeklyChart = document.getElementById("weekly-chart");
@@ -61,9 +65,11 @@ function getCurrentDateValue() {
 }
 
 // Fills the date and time inputs with the current local time.
+// Dates after today cannot be chosen.
 function setCurrentDateAndTime() {
   const now = new Date();
   runDateInput.value = getCurrentDateValue();
+  runDateInput.max = getCurrentDateValue();
   runTimeInput.value = String(now.getHours()).padStart(2, "0") + ":" +
     String(now.getMinutes()).padStart(2, "0");
 }
@@ -119,8 +125,9 @@ function sortRuns() {
   });
 }
 
-// Refreshes the run list, weekly summary and charts.
+// Refreshes the key figures, run list, weekly summary and charts.
 function showAllSections() {
+  showStats();
   showRunHistory();
   showWeeklySummary();
   showCharts();
@@ -157,11 +164,15 @@ function deleteRun(runIndex) {
 }
 
 // Creates the delete button for the run at the given position.
+// The aria-label tells screen reader users which run will be deleted.
 function createDeleteButton(runIndex) {
+  const run = runs[runIndex];
   const deleteButton = document.createElement("button");
   deleteButton.type = "button";
   deleteButton.className = "delete-button";
   deleteButton.textContent = "Löschen";
+  deleteButton.setAttribute("aria-label", "Lauf vom " + formatDate(run.date) +
+    " um " + run.time + " löschen");
   deleteButton.addEventListener("click", function () {
     deleteRun(runIndex);
   });
@@ -289,23 +300,31 @@ function createAveragePainBadge(weekStats) {
   return badge;
 }
 
-// Creates the kilometers, change and average pain text for one week.
+// Returns the short status text for a week: running, no run, or change to last week.
+function getWeekStatusText(weekStart, stats, previousKilometers) {
+  // The current week is not finished yet, so comparing it would be misleading.
+  if (weekStart === getWeekStart(getCurrentDateValue())) {
+    return "Woche läuft noch";
+  }
+  if (stats[weekStart] === undefined) {
+    return "kein Lauf";
+  }
+  return describeWeekChange(stats[weekStart].kilometers, previousKilometers);
+}
+
+// Creates the kilometers, status and average pain text for one week.
 function createWeekInfo(weekStart, stats, previousKilometers) {
   const weekInfo = document.createElement("span");
-  const kilometers = getWeekKilometers(stats, weekStart);
+  const statusText = getWeekStatusText(weekStart, stats, previousKilometers);
   weekInfo.className = "week-info";
+  weekInfo.textContent = formatKilometers(getWeekKilometers(stats, weekStart)) + " km";
 
-  if (stats[weekStart] === undefined) {
-    weekInfo.textContent = "0 km · kein Lauf";
-    return weekInfo;
+  if (statusText !== "") {
+    weekInfo.textContent += " · " + statusText;
   }
-
-  weekInfo.textContent = formatKilometers(kilometers) + " km";
-  const change = describeWeekChange(kilometers, previousKilometers);
-  if (change !== "") {
-    weekInfo.textContent += " · " + change;
+  if (stats[weekStart] !== undefined) {
+    weekInfo.appendChild(createAveragePainBadge(stats[weekStart]));
   }
-  weekInfo.appendChild(createAveragePainBadge(stats[weekStart]));
   return weekInfo;
 }
 
@@ -323,12 +342,80 @@ function createWeekItem(weekStart, stats, previousKilometers) {
   return listItem;
 }
 
-// Shows this week's total and every week since the first run, newest first.
-function showWeeklySummary() {
+// Returns the longest single run in kilometers, or 0 if there are no runs.
+function getLongestRun() {
+  let longestRun = 0;
+
+  for (const run of runs) {
+    if (run.kilometers > longestRun) {
+      longestRun = run.kilometers;
+    }
+  }
+
+  return longestRun;
+}
+
+// Returns the Monday three weeks before this week, the start of the last 4 weeks.
+function getFourWeeksStart() {
+  const date = parseDateValue(getWeekStart(getCurrentDateValue()));
+  date.setDate(date.getDate() - 21);
+  return toDateValue(date);
+}
+
+// Returns the average pain of the last 4 calendar weeks, or null if there were no runs.
+function calculateRecentAveragePain() {
+  const startDate = getFourWeeksStart();
+  let painSum = 0;
+  let runCount = 0;
+
+  for (const run of runs) {
+    if (run.date >= startDate) {
+      painSum += run.pain;
+      runCount += 1;
+    }
+  }
+
+  if (runCount === 0) {
+    return null;
+  }
+  return painSum / runCount;
+}
+
+// Shows the average pain of the last 4 calendar weeks with its color group.
+function showRecentAveragePain() {
+  const averagePain = calculateRecentAveragePain();
+
+  if (averagePain === null) {
+    statAveragePain.textContent = "–";
+    statAveragePainLabel.className = "pain-badge neutral";
+    statAveragePainLabel.textContent = "keine Läufe";
+    return;
+  }
+
+  const category = getPainCategory(Math.round(averagePain));
+  statAveragePain.textContent = formatOneDecimal(averagePain) + "/10";
+  statAveragePainLabel.className = "pain-badge " + category.color;
+  statAveragePainLabel.textContent = category.label;
+}
+
+// Fills the key figure cards at the top of the page.
+function showStats() {
   const stats = calculateWeeklyStats();
   const thisWeek = getWeekStart(getCurrentDateValue());
-  currentWeekTotal.textContent = "Diese Woche: " +
-    formatKilometers(getWeekKilometers(stats, thisWeek)) + " km";
+  const longestRun = getLongestRun();
+
+  statCurrentWeek.textContent = formatKilometers(getWeekKilometers(stats, thisWeek)) + " km";
+  statRunCount.textContent = runs.length;
+  statLongestRun.textContent = "–";
+  if (longestRun > 0) {
+    statLongestRun.textContent = formatKilometers(longestRun) + " km";
+  }
+  showRecentAveragePain();
+}
+
+// Shows every week since the first run, newest first.
+function showWeeklySummary() {
+  const stats = calculateWeeklyStats();
   weeklySummary.textContent = "";
 
   if (runs.length === 0) {
@@ -348,28 +435,67 @@ function showWeeklySummary() {
   }
 }
 
-// Creates one labeled horizontal bar for a chart.
-function createChartRow(label, displayValue, percentage, color) {
-  const row = document.createElement("div");
-  const rowLabel = document.createElement("span");
+// Formats a date value as a short day and month, e.g. "17.11.".
+function formatShortDate(dateValue) {
+  const dateParts = dateValue.split("-");
+  return dateParts[2] + "." + dateParts[1] + ".";
+}
+
+// Creates one column for a chart: value on top, bar in the middle, label below.
+function createChartColumn(label, displayValue, percentage, color, screenReaderText) {
+  const column = document.createElement("div");
+  const value = document.createElement("span");
   const track = document.createElement("div");
   const bar = document.createElement("div");
-  const value = document.createElement("span");
+  const columnLabel = document.createElement("span");
 
-  row.className = "chart-row";
-  rowLabel.textContent = label;
-  track.className = "chart-track";
-  track.setAttribute("role", "img");
-  track.setAttribute("aria-label", label + ": " + displayValue);
-  bar.className = "chart-bar " + color;
-  bar.style.width = percentage + "%";
+  column.className = "chart-column";
   value.className = "chart-value";
   value.textContent = displayValue;
+  track.className = "chart-track";
+  track.setAttribute("role", "img");
+  track.setAttribute("aria-label", screenReaderText);
+  bar.className = "chart-bar " + color;
+  bar.style.height = percentage + "%";
+  columnLabel.className = "chart-label";
+  columnLabel.textContent = label;
   track.appendChild(bar);
-  row.appendChild(rowLabel);
-  row.appendChild(track);
-  row.appendChild(value);
-  return row;
+  column.appendChild(value);
+  column.appendChild(track);
+  column.appendChild(columnLabel);
+  return column;
+}
+
+// Creates the scale on the left of a chart: maximum at the top, half in the middle, 0 at the bottom.
+// It is hidden from screen readers, because every column already has a full description.
+function createChartAxis(maximumText, halfText) {
+  const axis = document.createElement("div");
+  const axisBox = document.createElement("div");
+  const spacer = document.createElement("span");
+  const axisTexts = [maximumText, halfText, "0"];
+  const positions = ["axis-top", "axis-middle", "axis-bottom"];
+
+  axis.className = "chart-axis";
+  axis.setAttribute("aria-hidden", "true");
+  axisBox.className = "chart-axis-box";
+  for (let index = 0; index < axisTexts.length; index++) {
+    const axisText = document.createElement("span");
+    axisText.className = positions[index];
+    axisText.textContent = axisTexts[index];
+    axisBox.appendChild(axisText);
+  }
+  // The empty label below the scale keeps it at the same height as the columns.
+  // " " is a non-breaking space; a normal space would take up no height.
+  spacer.className = "chart-label";
+  spacer.textContent = " ";
+  axis.appendChild(axisBox);
+  axis.appendChild(spacer);
+  return axis;
+}
+
+// Scrolls a chart to the right end, so the newest columns are visible.
+function scrollChartToNewest(chart) {
+  chart.scrollLeft = chart.scrollWidth;
 }
 
 // Returns the largest weekly distance.
@@ -385,7 +511,25 @@ function getLongestWeekDistance(weekStarts, stats) {
   return longestWeek;
 }
 
-// Shows each week's distance as a bar relative to the longest week.
+// Creates the chart column for one week. The current week is highlighted.
+function createWeekColumn(weekStart, stats, longestWeek) {
+  const kilometers = getWeekKilometers(stats, weekStart);
+  const value = formatKilometers(kilometers) + " km";
+  let screenReaderText = "Woche ab " + formatDate(weekStart) + ": " + value;
+  const isCurrentWeek = weekStart === getWeekStart(getCurrentDateValue());
+
+  if (isCurrentWeek) {
+    screenReaderText += " (diese Woche)";
+  }
+  const column = createChartColumn(formatShortDate(weekStart), value,
+    (kilometers / longestWeek) * 100, "distance", screenReaderText);
+  if (isCurrentWeek) {
+    column.classList.add("current-week");
+  }
+  return column;
+}
+
+// Shows each week's distance as a column, oldest week on the left.
 function showWeeklyChart() {
   weeklyChart.textContent = "";
 
@@ -397,15 +541,15 @@ function showWeeklyChart() {
   const stats = calculateWeeklyStats();
   const weekStarts = getAllWeekStarts(stats);
   const longestWeek = getLongestWeekDistance(weekStarts, stats);
-  for (let index = weekStarts.length - 1; index >= 0; index--) {
-    const kilometers = getWeekKilometers(stats, weekStarts[index]);
-    const label = "Ab " + formatDate(weekStarts[index]);
-    const value = formatKilometers(kilometers) + " km";
-    weeklyChart.appendChild(createChartRow(label, value, (kilometers / longestWeek) * 100, "distance"));
+  weeklyChart.appendChild(createChartAxis(formatKilometers(longestWeek) + " km",
+    formatKilometers(longestWeek / 2)));
+  for (const weekStart of weekStarts) {
+    weeklyChart.appendChild(createWeekColumn(weekStart, stats, longestWeek));
   }
+  scrollChartToNewest(weeklyChart);
 }
 
-// Shows pain scores by date and time, oldest run first.
+// Shows pain scores as columns by date and time, oldest run on the left.
 function showPainChart() {
   painChart.textContent = "";
 
@@ -414,12 +558,16 @@ function showPainChart() {
     return;
   }
 
+  painChart.appendChild(createChartAxis("10", "5"));
   for (const run of runs) {
     const category = getPainCategory(run.pain);
-    const label = formatDate(run.date) + " " + run.time;
-    const value = run.pain + "/10 · " + category.label;
-    painChart.appendChild(createChartRow(label, value, run.pain * 10, category.color));
+    const value = run.pain + "/10\n" + category.label;
+    const screenReaderText = "Lauf am " + formatDate(run.date) + " um " + run.time +
+      ": Schmerzen " + run.pain + "/10 (" + category.label + ")";
+    painChart.appendChild(createChartColumn(formatShortDate(run.date), value,
+      run.pain * 10, category.color, screenReaderText));
   }
+  scrollChartToNewest(painChart);
 }
 
 // Refreshes both charts after runs change or load.

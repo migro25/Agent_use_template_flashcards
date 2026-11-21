@@ -15,6 +15,15 @@ Website konnte gut erstellt werden, die Funktionen führte Co-Pilot so aus, wie 
 - Pro Woche wird der durchschnittliche Schmerz als farbiges Badge angezeigt, z. B. „Ø Schmerz 3,5/10 (Gelb)“ (`calculateWeeklyStats`, `createAveragePainBadge`).
 - Optionales Notizfeld pro Lauf (max. 200 Zeichen). Die Notiz steht in der Laufliste unter dem Lauf.
 - Bereich „Daten sichern“: Läufe als `.json`-Datei exportieren und wieder importieren (`exportRuns`, `importRuns`). Der Import prüft die Datei und ersetzt nach Rückfrage die aktuellen Läufe.
+- Die aktuelle Woche zeigt „Woche läuft noch“ statt eines Vergleichs zur Vorwoche, weil eine halbe Woche sonst wie ein Einbruch aussieht (`getWeekStatusText`).
+- Im Datumsfeld können keine Tage nach heute gewählt werden (`max` am Datumsfeld).
+- Löschen-Buttons haben ein `aria-label` wie „Lauf vom 17.11.2026 um 07:00 löschen“, damit Screenreader sagen, welcher Lauf gelöscht wird.
+- Die Diagramme sind jetzt Säulendiagramme mit Zeitachse nach rechts: links die älteste Woche bzw. der älteste Lauf, rechts die neuesten (`createChartColumn`). Bei vielen Säulen scrollt das Diagramm seitlich in seinem eigenen Kasten und startet ganz rechts bei den neuesten Werten (`scrollChartToNewest`).
+- Kennzahl-Karten unter dem Titel: „Diese Woche“, „Läufe gesamt“, „Ø Schmerz (4 Wo.)“ mit Farbgruppe und „Längster Lauf“ (`showStats`, `showRecentAveragePain`, `getLongestRun`). Die Zeile „Diese Woche: … km“ in der Wochenübersicht ist dafür weggefallen.
+- Diagramme: Skala links mit Maximum, Hälfte und 0 (`createChartAxis`), Hilfslinien bei 25/50/75/100 %, Säulen wachsen beim Laden animiert nach oben, die aktuelle Woche ist dunkler und fett beschriftet (`createWeekColumn`), und beim Drüberfahren wird die Säule betont.
+- Neuer Look: Kopfbereich mit grünem Farbverlauf, Systemschrift, weichere Schatten und runde Ecken. Die Karten blenden beim Laden nacheinander ein.
+- Dark Mode, der sich automatisch nach der Einstellung von Mac oder Handy richtet. Alle Farben stehen dafür als Variablen am Anfang von `style.css`.
+- Wer in den Systemeinstellungen „Bewegung reduzieren“ aktiviert hat, bekommt keine Animationen.
 
 ## Next
 was könnte man verbessern? was wären noch hilfreiche Features?
@@ -31,6 +40,30 @@ Zweiter Schritt (mit Claude) – erledigt, siehe Done:
 6. Durchschnittlicher Schmerz pro Woche
 7. Export/Import der Läufe als Datei
 
+Dritter Schritt (mit Claude) – erledigt, siehe Done:
+- Laufende Woche nicht mit der Vorwoche vergleichen
+- Keine Läufe in der Zukunft eintragen
+- Verständliche Löschen-Buttons für Screenreader
+
+Vierter Schritt (mit Claude) – erledigt, siehe Done:
+- Diagramme als Säulen mit Zeitachse nach rechts statt Zeilen untereinander
+
+Fünfter Schritt (mit Claude) – erledigt, siehe Done:
+- Kennzahl-Karten oben
+- Diagramme aufwerten (Skala, Hilfslinien, Animation, aktuelle Woche)
+- Header und Gesamtlook
+- Dark Mode
+
+Weitere Ideen für später:
+- Strava-Anbindung, damit Läufe automatisch kommen und man nur den Schmerz einträgt. Eine echte automatische Synchronisierung braucht einen Server, weil Strava ein geheimes Client Secret verlangt, das nicht in öffentliches HTML/JS darf. Das passt nicht zur SPEC (kein Server, keine Synchronisierung). Ohne Server ginge ein Import der Datei `activities.csv` aus dem Strava-Datenexport; danach trägt man bei jedem Lauf nur noch den Schmerz nach.
+- Lauf bearbeiten statt nur löschen
+- Lange Listen kürzen (z. B. nur die letzten 8 Wochen, Rest über „Alle anzeigen“)
+- Kalenderwoche anzeigen („KW 47“)
+- Dauer eintragen und Pace (min/km) berechnen
+- Schmerz am Folgetag erfassen (weicht von der SPEC ab)
+- Erinnerung an den letzten Export
+- Tippfehler im README korrigieren („ode ein“ → „oder in“)
+
 
 
 
@@ -41,6 +74,8 @@ Zweiter Schritt (mit Claude) – erledigt, siehe Done:
 - Die Farbe des Wochen-Durchschnitts wird aus dem gerundeten Durchschnitt berechnet (3,5 → 4 → Gelb), damit dieselben Grenzen wie bei einzelnen Läufen gelten.
 - Import ersetzt alle Läufe statt sie hinzuzufügen. So entstehen keine doppelten Einträge, wenn man dieselbe Datei zweimal importiert. Vorher kommt eine Rückfrage.
 - Die Notiz ist optional. Ältere Läufe ohne Notiz funktionieren weiter.
+- Für die Schrift wird die Systemschrift (`system-ui`) verwendet statt einer Google-Schrift. So braucht die Seite keine externen Dateien und lädt auch offline.
+- Die Seite bleibt einspaltig, wie es die SPEC verlangt. Nur die Kennzahl-Karten stehen nebeneinander (2 auf dem Handy, 4 am Computer).
 
 ## Known problems
 - Wenn man nach dem Ändern der Dateien nur normal neu lädt, kann der Browser noch die alte Version aus dem Cache zeigen. Dann hilft ein harter Reload (Cmd+Shift+R).
