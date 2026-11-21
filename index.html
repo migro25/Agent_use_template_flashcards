@@ -34,6 +34,10 @@
           Schmerzfarbe wird nach Eingabe angezeigt.
         </output>
 
+        <label for="run-note">Notiz (optional)</label>
+        <textarea id="run-note" name="note" rows="2" maxlength="200"
+          placeholder="z. B. Knie ab km 3 gespürt"></textarea>
+
         <button type="submit">Lauf speichern</button>
       </form>
     </section>
@@ -55,6 +59,16 @@
       <div id="weekly-chart" class="chart" aria-label="Balkendiagramm der Wochenkilometer"></div>
       <h3>Schmerzverlauf je Lauf</h3>
       <div id="pain-chart" class="chart" aria-label="Balkendiagramm der Schmerzwerte je Lauf"></div>
+    </section>
+
+    <section class="panel" aria-labelledby="data-heading">
+      <h2 id="data-heading">Daten sichern</h2>
+      <p class="hint">Exportiere deine Läufe als Datei, um sie zu sichern oder in einem anderen Browser zu öffnen. Beim Import werden die aktuellen Läufe ersetzt.</p>
+      <div class="data-actions">
+        <button type="button" id="export-button">Läufe exportieren</button>
+        <label for="import-input">Läufe importieren (.json-Datei)</label>
+        <input type="file" id="import-input" accept=".json,application/json">
+      </div>
     </section>
   </main>
 </body>

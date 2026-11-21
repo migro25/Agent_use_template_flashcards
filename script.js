@@ -3,12 +3,15 @@ const runDateInput = document.getElementById("run-date");
 const runTimeInput = document.getElementById("run-time");
 const distanceInput = document.getElementById("run-distance");
 const painInput = document.getElementById("pain-level");
+const noteInput = document.getElementById("run-note");
 const painIndicator = document.getElementById("pain-indicator");
 const currentWeekTotal = document.getElementById("current-week-total");
 const weeklySummary = document.getElementById("weekly-summary");
 const runList = document.getElementById("run-list");
 const weeklyChart = document.getElementById("weekly-chart");
 const painChart = document.getElementById("pain-chart");
+const exportButton = document.getElementById("export-button");
+const importInput = document.getElementById("import-input");
 
 const runs = [];
 
@@ -38,13 +41,23 @@ function updatePainIndicator() {
   painIndicator.textContent = painLevel + "/10 – " + category.label;
 }
 
+// Turns a date value like "2026-11-21" into a local Date object.
+function parseDateValue(dateValue) {
+  const dateParts = dateValue.split("-");
+  return new Date(Number(dateParts[0]), Number(dateParts[1]) - 1, Number(dateParts[2]));
+}
+
+// Turns a Date object into a date value like "2026-11-21".
+function toDateValue(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return year + "-" + month + "-" + day;
+}
+
 // Returns today's date in the format needed by a date input.
 function getCurrentDateValue() {
-  const today = new Date();
-  const year = today.getFullYear();
-  const month = String(today.getMonth() + 1).padStart(2, "0");
-  const day = String(today.getDate()).padStart(2, "0");
-  return year + "-" + month + "-" + day;
+  return toDateValue(new Date());
 }
 
 // Fills the date and time inputs with the current local time.
@@ -57,12 +70,17 @@ function setCurrentDateAndTime() {
 
 // Returns the Monday date for the week of a given date.
 function getWeekStart(dateValue) {
-  const dateParts = dateValue.split("-");
-  const date = new Date(Number(dateParts[0]), Number(dateParts[1]) - 1, Number(dateParts[2]));
+  const date = parseDateValue(dateValue);
   const daysSinceMonday = (date.getDay() + 6) % 7;
   date.setDate(date.getDate() - daysSinceMonday);
-  return date.getFullYear() + "-" + String(date.getMonth() + 1).padStart(2, "0") +
-    "-" + String(date.getDate()).padStart(2, "0");
+  return toDateValue(date);
+}
+
+// Returns the Monday one week after the given Monday.
+function getNextWeekStart(weekStart) {
+  const date = parseDateValue(weekStart);
+  date.setDate(date.getDate() + 7);
+  return toDateValue(date);
 }
 
 // Formats a date value as day, month, and year.
@@ -76,6 +94,14 @@ function formatKilometers(kilometers) {
   return kilometers.toLocaleString("de-DE", {
     minimumFractionDigits: 0,
     maximumFractionDigits: 2
+  });
+}
+
+// Formats a number with at most one decimal place in German notation.
+function formatOneDecimal(number) {
+  return number.toLocaleString("de-DE", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 1
   });
 }
 
@@ -142,23 +168,36 @@ function createDeleteButton(runIndex) {
   return deleteButton;
 }
 
+// Creates the date, distance and (if present) note text for a run.
+function createRunDetails(run) {
+  const runDetails = document.createElement("span");
+  runDetails.className = "run-details";
+  runDetails.textContent = formatDate(run.date) + " um " + run.time + " · " +
+    formatKilometers(run.kilometers) + " km";
+
+  if (run.note) {
+    const noteText = document.createElement("span");
+    noteText.className = "run-note";
+    noteText.textContent = "Notiz: " + run.note;
+    runDetails.appendChild(noteText);
+  }
+
+  return runDetails;
+}
+
 // Creates one history item for a run.
 function createRunItem(run, runIndex) {
   const listItem = document.createElement("li");
-  const runDetails = document.createElement("span");
   const category = getPainCategory(run.pain);
   const painBadge = document.createElement("span");
   const itemActions = document.createElement("span");
 
-  runDetails.className = "run-details";
-  runDetails.textContent = formatDate(run.date) + " um " + run.time + " · " +
-    formatKilometers(run.kilometers) + " km";
   painBadge.className = "pain-badge " + category.color;
   painBadge.textContent = "Schmerzen: " + run.pain + "/10 (" + category.label + ")";
   itemActions.className = "run-actions";
   itemActions.appendChild(painBadge);
   itemActions.appendChild(createDeleteButton(runIndex));
-  listItem.appendChild(runDetails);
+  listItem.appendChild(createRunDetails(run));
   listItem.appendChild(itemActions);
   return listItem;
 }
@@ -179,42 +218,133 @@ function showRunHistory() {
   }
 }
 
-// Adds each run's distance to its calendar week.
-function calculateWeeklyTotals() {
-  const totals = {};
+// Collects kilometers, pain sum and number of runs for each calendar week.
+function calculateWeeklyStats() {
+  const stats = {};
 
   for (const run of runs) {
     const weekStart = getWeekStart(run.date);
-    if (totals[weekStart] === undefined) {
-      totals[weekStart] = 0;
+    if (stats[weekStart] === undefined) {
+      stats[weekStart] = { kilometers: 0, painSum: 0, runCount: 0 };
     }
-    totals[weekStart] += run.kilometers;
+    stats[weekStart].kilometers += run.kilometers;
+    stats[weekStart].painSum += run.pain;
+    stats[weekStart].runCount += 1;
   }
 
-  return totals;
+  return stats;
 }
 
-// Shows this week's total and totals for all weeks with runs.
-function showWeeklySummary() {
-  const totals = calculateWeeklyTotals();
+// Returns every week from the first run until this week, also weeks without runs.
+function getAllWeekStarts(stats) {
   const thisWeek = getWeekStart(getCurrentDateValue());
-  const weekStarts = Object.keys(totals).sort();
+  const weeksWithRuns = Object.keys(stats).sort();
+  const weekStarts = [];
+  let weekStart = thisWeek;
+  let lastWeek = thisWeek;
+
+  if (weeksWithRuns.length > 0 && weeksWithRuns[0] < weekStart) {
+    weekStart = weeksWithRuns[0];
+  }
+  if (weeksWithRuns.length > 0 && weeksWithRuns[weeksWithRuns.length - 1] > lastWeek) {
+    lastWeek = weeksWithRuns[weeksWithRuns.length - 1];
+  }
+
+  while (weekStart <= lastWeek) {
+    weekStarts.push(weekStart);
+    weekStart = getNextWeekStart(weekStart);
+  }
+  return weekStarts;
+}
+
+// Returns the kilometers of a week, or 0 if there was no run.
+function getWeekKilometers(stats, weekStart) {
+  if (stats[weekStart] === undefined) {
+    return 0;
+  }
+  return stats[weekStart].kilometers;
+}
+
+// Describes the change in kilometers compared to the week before.
+function describeWeekChange(currentKilometers, previousKilometers) {
+  if (previousKilometers === 0) {
+    return "";
+  }
+
+  const change = Math.round((currentKilometers - previousKilometers) / previousKilometers * 100);
+  let sign = "";
+  if (change > 0) {
+    sign = "+";
+  }
+  return sign + change + " % zur Vorwoche";
+}
+
+// Creates a colored badge with the average pain of a week.
+function createAveragePainBadge(weekStats) {
+  const averagePain = weekStats.painSum / weekStats.runCount;
+  const category = getPainCategory(Math.round(averagePain));
+  const badge = document.createElement("span");
+  badge.className = "pain-badge " + category.color;
+  badge.textContent = "Ø Schmerz " + formatOneDecimal(averagePain) + "/10 (" + category.label + ")";
+  return badge;
+}
+
+// Creates the kilometers, change and average pain text for one week.
+function createWeekInfo(weekStart, stats, previousKilometers) {
+  const weekInfo = document.createElement("span");
+  const kilometers = getWeekKilometers(stats, weekStart);
+  weekInfo.className = "week-info";
+
+  if (stats[weekStart] === undefined) {
+    weekInfo.textContent = "0 km · kein Lauf";
+    return weekInfo;
+  }
+
+  weekInfo.textContent = formatKilometers(kilometers) + " km";
+  const change = describeWeekChange(kilometers, previousKilometers);
+  if (change !== "") {
+    weekInfo.textContent += " · " + change;
+  }
+  weekInfo.appendChild(createAveragePainBadge(stats[weekStart]));
+  return weekInfo;
+}
+
+// Creates one list item for a calendar week.
+function createWeekItem(weekStart, stats, previousKilometers) {
+  const listItem = document.createElement("li");
+  const weekLabel = document.createElement("span");
+
+  if (stats[weekStart] === undefined) {
+    listItem.className = "empty-week";
+  }
+  weekLabel.textContent = "Woche ab " + formatDate(weekStart);
+  listItem.appendChild(weekLabel);
+  listItem.appendChild(createWeekInfo(weekStart, stats, previousKilometers));
+  return listItem;
+}
+
+// Shows this week's total and every week since the first run, newest first.
+function showWeeklySummary() {
+  const stats = calculateWeeklyStats();
+  const thisWeek = getWeekStart(getCurrentDateValue());
   currentWeekTotal.textContent = "Diese Woche: " +
-    formatKilometers(totals[thisWeek] || 0) + " km";
+    formatKilometers(getWeekKilometers(stats, thisWeek)) + " km";
   weeklySummary.textContent = "";
 
-  if (weekStarts.length === 0) {
+  if (runs.length === 0) {
     const emptyMessage = document.createElement("li");
     emptyMessage.textContent = "Noch keine Wochenkilometer vorhanden.";
     weeklySummary.appendChild(emptyMessage);
     return;
   }
 
+  const weekStarts = getAllWeekStarts(stats);
   for (let index = weekStarts.length - 1; index >= 0; index--) {
-    const listItem = document.createElement("li");
-    listItem.textContent = "Woche ab " + formatDate(weekStarts[index]) + ": " +
-      formatKilometers(totals[weekStarts[index]]) + " km";
-    weeklySummary.appendChild(listItem);
+    let previousKilometers = 0;
+    if (index > 0) {
+      previousKilometers = getWeekKilometers(stats, weekStarts[index - 1]);
+    }
+    weeklySummary.appendChild(createWeekItem(weekStarts[index], stats, previousKilometers));
   }
 }
 
@@ -243,12 +373,12 @@ function createChartRow(label, displayValue, percentage, color) {
 }
 
 // Returns the largest weekly distance.
-function getLongestWeekDistance(weekStarts, totals) {
+function getLongestWeekDistance(weekStarts, stats) {
   let longestWeek = 0;
 
   for (const weekStart of weekStarts) {
-    if (totals[weekStart] > longestWeek) {
-      longestWeek = totals[weekStart];
+    if (getWeekKilometers(stats, weekStart) > longestWeek) {
+      longestWeek = getWeekKilometers(stats, weekStart);
     }
   }
 
@@ -257,22 +387,21 @@ function getLongestWeekDistance(weekStarts, totals) {
 
 // Shows each week's distance as a bar relative to the longest week.
 function showWeeklyChart() {
-  const totals = calculateWeeklyTotals();
-  const weekStarts = Object.keys(totals).sort();
   weeklyChart.textContent = "";
 
-  if (weekStarts.length === 0) {
+  if (runs.length === 0) {
     weeklyChart.textContent = "Noch keine Wochenkilometer zum Anzeigen.";
     return;
   }
 
-  const longestWeek = getLongestWeekDistance(weekStarts, totals);
+  const stats = calculateWeeklyStats();
+  const weekStarts = getAllWeekStarts(stats);
+  const longestWeek = getLongestWeekDistance(weekStarts, stats);
   for (let index = weekStarts.length - 1; index >= 0; index--) {
-    const weekStart = weekStarts[index];
-    const percentage = (totals[weekStart] / longestWeek) * 100;
-    const label = "Ab " + formatDate(weekStart);
-    const value = formatKilometers(totals[weekStart]) + " km";
-    weeklyChart.appendChild(createChartRow(label, value, percentage, "distance"));
+    const kilometers = getWeekKilometers(stats, weekStarts[index]);
+    const label = "Ab " + formatDate(weekStarts[index]);
+    const value = formatKilometers(kilometers) + " km";
+    weeklyChart.appendChild(createChartRow(label, value, (kilometers / longestWeek) * 100, "distance"));
   }
 }
 
@@ -312,7 +441,8 @@ function addRun(event) {
     date: runDateInput.value,
     time: runTimeInput.value,
     kilometers: Number(distanceInput.value),
-    pain: Number(painInput.value)
+    pain: Number(painInput.value),
+    note: noteInput.value.trim()
   });
 
   sortRuns();
@@ -323,8 +453,114 @@ function addRun(event) {
   updatePainIndicator();
 }
 
+// Downloads all runs as a JSON file.
+function exportRuns() {
+  if (runs.length === 0) {
+    alert("Es gibt noch keine Läufe zum Exportieren.");
+    return;
+  }
+
+  const fileContent = JSON.stringify(runs, null, 2);
+  const file = new Blob([fileContent], { type: "application/json" });
+  const downloadLink = document.createElement("a");
+  downloadLink.href = URL.createObjectURL(file);
+  downloadLink.download = "laeufe-" + getCurrentDateValue() + ".json";
+  downloadLink.click();
+}
+
+// Returns true if an imported object has all fields of a valid run.
+function isValidRun(run) {
+  // The patterns check the formats "2026-11-21" and "18:30".
+  const datePattern = /^\d{4}-\d{2}-\d{2}$/;
+  const timePattern = /^\d{2}:\d{2}$/;
+
+  if (typeof run !== "object" || run === null) {
+    return false;
+  }
+  if (typeof run.date !== "string" || !datePattern.test(run.date)) {
+    return false;
+  }
+  if (typeof run.time !== "string" || !timePattern.test(run.time)) {
+    return false;
+  }
+  if (typeof run.kilometers !== "number" || !(run.kilometers > 0)) {
+    return false;
+  }
+  return Number.isInteger(run.pain) && run.pain >= 1 && run.pain <= 10;
+}
+
+// Reads runs from the file text. Returns null if the file is not valid.
+function readRunsFromText(fileText) {
+  let importedRuns;
+  try {
+    importedRuns = JSON.parse(fileText);
+  } catch (error) {
+    return null;
+  }
+
+  if (!Array.isArray(importedRuns)) {
+    return null;
+  }
+  for (const run of importedRuns) {
+    if (!isValidRun(run)) {
+      return null;
+    }
+  }
+  return importedRuns;
+}
+
+// Replaces all current runs with the imported runs and saves them.
+function replaceRuns(importedRuns) {
+  runs.length = 0;
+
+  for (const run of importedRuns) {
+    let note = "";
+    if (typeof run.note === "string") {
+      note = run.note;
+    }
+    runs.push({ date: run.date, time: run.time, kilometers: run.kilometers, pain: run.pain, note: note });
+  }
+
+  sortRuns();
+  saveRuns();
+  showAllSections();
+}
+
+// Checks the imported file text and, after confirmation, uses its runs.
+function handleImportedText(fileText) {
+  const importedRuns = readRunsFromText(fileText);
+
+  if (importedRuns === null) {
+    alert("Die Datei konnte nicht importiert werden. Bitte wähle eine exportierte Lauf-Datei.");
+    return;
+  }
+
+  const question = "Deine aktuellen " + runs.length + " Läufe werden durch " +
+    importedRuns.length + " importierte Läufe ersetzt. Fortfahren?";
+  if (confirm(question)) {
+    replaceRuns(importedRuns);
+  }
+}
+
+// Reads the file the user picked for the import.
+function importRuns() {
+  const file = importInput.files[0];
+  if (file === undefined) {
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.addEventListener("load", function () {
+    handleImportedText(reader.result);
+  });
+  reader.readAsText(file);
+  importInput.value = "";
+}
+
 runForm.addEventListener("submit", addRun);
 painInput.addEventListener("input", updatePainIndicator);
+exportButton.addEventListener("click", exportRuns);
+importInput.addEventListener("change", importRuns);
 setCurrentDateAndTime();
 updatePainIndicator();
 loadRuns();

@@ -56,16 +56,23 @@ body {
   gap: 8px;
 }
 
-input {
+input,
+textarea {
   width: 100%;
   margin-bottom: 8px;
   padding: 10px;
   border: 1px solid #aebbb4;
   border-radius: 6px;
+  font-family: inherit;
   font-size: 16px;
 }
 
-input:focus {
+textarea {
+  resize: vertical;
+}
+
+input:focus,
+textarea:focus {
   border-color: #247451;
   outline: 2px solid #24745133;
 }
@@ -146,6 +153,34 @@ button:hover {
 .run-details {
   display: flex;
   flex-direction: column;
+}
+
+.run-note {
+  color: #52615b;
+  font-size: 14px;
+}
+
+.week-info {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  text-align: right;
+}
+
+.summary-list li.empty-week {
+  color: #6b7872;
+  background-color: #fff;
+  border: 1px dashed #c9d3ce;
+}
+
+.data-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 12px;
 }
 
 .run-actions {
