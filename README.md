@@ -1,4 +1,4 @@
-flash card app
+return to sport Lauftagebuch
 
 # Usage: 
-Öffne index.html in Browser ode rin VSCode preview. 
+Öffne index.html in Browser ode ein VSCode preview. 

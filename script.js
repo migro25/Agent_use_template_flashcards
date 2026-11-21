@@ -84,6 +84,22 @@ function saveRuns() {
   localStorage.setItem("runs", JSON.stringify(runs));
 }
 
+// Sorts all runs by date and time, oldest run first.
+function sortRuns() {
+  runs.sort(function (firstRun, secondRun) {
+    const firstKey = firstRun.date + " " + firstRun.time;
+    const secondKey = secondRun.date + " " + secondRun.time;
+    return firstKey.localeCompare(secondKey);
+  });
+}
+
+// Refreshes the run list, weekly summary and charts.
+function showAllSections() {
+  showRunHistory();
+  showWeeklySummary();
+  showCharts();
+}
+
 // Loads saved runs and refreshes the page sections.
 function loadRuns() {
   const savedRuns = localStorage.getItem("runs");
@@ -95,29 +111,59 @@ function loadRuns() {
     }
   }
 
-  showRunHistory();
-  showWeeklySummary();
-  showCharts();
+  sortRuns();
+  showAllSections();
+}
+
+// Asks for confirmation, then removes one run and saves the change.
+function deleteRun(runIndex) {
+  const run = runs[runIndex];
+  const question = "Lauf vom " + formatDate(run.date) + " um " + run.time +
+    " (" + formatKilometers(run.kilometers) + " km) wirklich löschen?";
+
+  if (!confirm(question)) {
+    return;
+  }
+
+  runs.splice(runIndex, 1);
+  saveRuns();
+  showAllSections();
+}
+
+// Creates the delete button for the run at the given position.
+function createDeleteButton(runIndex) {
+  const deleteButton = document.createElement("button");
+  deleteButton.type = "button";
+  deleteButton.className = "delete-button";
+  deleteButton.textContent = "Löschen";
+  deleteButton.addEventListener("click", function () {
+    deleteRun(runIndex);
+  });
+  return deleteButton;
 }
 
 // Creates one history item for a run.
-function createRunItem(run) {
+function createRunItem(run, runIndex) {
   const listItem = document.createElement("li");
   const runDetails = document.createElement("span");
   const category = getPainCategory(run.pain);
   const painBadge = document.createElement("span");
+  const itemActions = document.createElement("span");
 
   runDetails.className = "run-details";
   runDetails.textContent = formatDate(run.date) + " um " + run.time + " · " +
     formatKilometers(run.kilometers) + " km";
   painBadge.className = "pain-badge " + category.color;
   painBadge.textContent = "Schmerzen: " + run.pain + "/10 (" + category.label + ")";
+  itemActions.className = "run-actions";
+  itemActions.appendChild(painBadge);
+  itemActions.appendChild(createDeleteButton(runIndex));
   listItem.appendChild(runDetails);
-  listItem.appendChild(painBadge);
+  listItem.appendChild(itemActions);
   return listItem;
 }
 
-// Shows saved runs with the most recently added run first.
+// Shows saved runs with the newest run (by date and time) first.
 function showRunHistory() {
   runList.textContent = "";
 
@@ -129,7 +175,7 @@ function showRunHistory() {
   }
 
   for (let index = runs.length - 1; index >= 0; index--) {
-    runList.appendChild(createRunItem(runs[index]));
+    runList.appendChild(createRunItem(runs[index], index));
   }
 }
 
@@ -230,7 +276,7 @@ function showWeeklyChart() {
   }
 }
 
-// Shows pain scores in the order runs were entered.
+// Shows pain scores by date and time, oldest run first.
 function showPainChart() {
   painChart.textContent = "";
 
@@ -269,10 +315,9 @@ function addRun(event) {
     pain: Number(painInput.value)
   });
 
+  sortRuns();
   saveRuns();
-  showRunHistory();
-  showWeeklySummary();
-  showCharts();
+  showAllSections();
   runForm.reset();
   setCurrentDateAndTime();
   updatePainIndicator();

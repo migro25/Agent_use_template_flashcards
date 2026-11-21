@@ -148,6 +148,27 @@ button:hover {
   flex-direction: column;
 }
 
+.run-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.delete-button {
+  padding: 5px 10px;
+  border: 1px solid #b54040;
+  color: #8b1e1e;
+  background-color: #fff;
+  font-size: 14px;
+}
+
+.delete-button:hover {
+  color: #fff;
+  background-color: #b54040;
+}
+
 .pain-badge {
   flex-shrink: 0;
   padding: 5px 9px;
