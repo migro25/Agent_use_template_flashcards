@@ -24,6 +24,10 @@ Website konnte gut erstellt werden, die Funktionen führte Co-Pilot so aus, wie 
 - Neuer Look: Kopfbereich mit grünem Farbverlauf, Systemschrift, weichere Schatten und runde Ecken. Die Karten blenden beim Laden nacheinander ein.
 - Dark Mode, der sich automatisch nach der Einstellung von Mac oder Handy richtet. Alle Farben stehen dafür als Variablen am Anfang von `style.css`.
 - Wer in den Systemeinstellungen „Bewegung reduzieren“ aktiviert hat, bekommt keine Animationen.
+- Läufe bearbeiten: Jeder Lauf hat einen „Bearbeiten“-Button. Der Lauf wird ins Formular geladen („Lauf bearbeiten“, „Änderung speichern“, „Abbrechen“) und in der Liste grün umrandet (`startEditing`, `stopEditing`, `cancelEditing`, `saveRunFromForm`).
+- Der Schmerz-Wert wird mit einem Schieberegler (1–10) gewählt. Er färbt sich live grün/gelb/rot. Solange er nicht berührt wurde, ist er grau und das Formular lässt sich nicht speichern (`choosePain`, `resetPainChoice`).
+- Beschädigte gespeicherte Daten legen die Seite nicht mehr lahm: Ungültige Einträge werden übersprungen, die Originaldaten werden unter `runs-backup` gesichert und es erscheint eine Meldung (`readRunsFromStorage`, `backupBrokenData`).
+- Auf dem Handy stehen Schmerz-Badge und Buttons unter dem Lauftext, damit der Text Platz hat.
 
 ## Next
 was könnte man verbessern? was wären noch hilfreiche Features?
@@ -54,9 +58,17 @@ Fünfter Schritt (mit Claude) – erledigt, siehe Done:
 - Header und Gesamtlook
 - Dark Mode
 
+Sechster Schritt (mit Claude) – erledigt, siehe Done:
+- Lauf bearbeiten
+- Schmerz als Schieberegler
+- Seite stürzt bei kaputtem Speicher nicht mehr ab
+
 Weitere Ideen für später:
 - Strava-Anbindung, damit Läufe automatisch kommen und man nur den Schmerz einträgt. Eine echte automatische Synchronisierung braucht einen Server, weil Strava ein geheimes Client Secret verlangt, das nicht in öffentliches HTML/JS darf. Das passt nicht zur SPEC (kein Server, keine Synchronisierung). Ohne Server ginge ein Import der Datei `activities.csv` aus dem Strava-Datenexport; danach trägt man bei jedem Lauf nur noch den Schmerz nach.
-- Lauf bearbeiten statt nur löschen
+- „Rückgängig“ nach dem Löschen statt Nachfrage
+- Begrüßungskarte, wenn noch keine Läufe da sind
+- Doppelte Läufe (gleiches Datum und Uhrzeit) erkennen
+- Am Handy wie eine App nutzen (PWA, braucht 2 neue Dateien)
 - Lange Listen kürzen (z. B. nur die letzten 8 Wochen, Rest über „Alle anzeigen“)
 - Kalenderwoche anzeigen („KW 47“)
 - Dauer eintragen und Pace (min/km) berechnen
@@ -75,6 +87,8 @@ Weitere Ideen für später:
 - Import ersetzt alle Läufe statt sie hinzuzufügen. So entstehen keine doppelten Einträge, wenn man dieselbe Datei zweimal importiert. Vorher kommt eine Rückfrage.
 - Die Notiz ist optional. Ältere Läufe ohne Notiz funktionieren weiter.
 - Für die Schrift wird die Systemschrift (`system-ui`) verwendet statt einer Google-Schrift. So braucht die Seite keine externen Dateien und lädt auch offline.
+- Ein Schieberegler hat immer einen Wert (Start: 5). Damit der Schmerz-Wert trotzdem ein Pflichtfeld bleibt, merkt sich `painWasChosen`, ob der Regler berührt wurde. Vorher meldet `setCustomValidity` beim Speichern „Bitte wähle mit dem Regler einen Schmerz-Wert.“
+- Beim Löschen oder Importieren wird ein offenes Bearbeiten beendet, weil sich dabei die Positionen in der Liste verschieben und sonst der falsche Lauf überschrieben werden könnte.
 - Die Seite bleibt einspaltig, wie es die SPEC verlangt. Nur die Kennzahl-Karten stehen nebeneinander (2 auf dem Handy, 4 am Computer).
 
 ## Known problems

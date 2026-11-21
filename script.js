@@ -16,8 +16,16 @@ const weeklyChart = document.getElementById("weekly-chart");
 const painChart = document.getElementById("pain-chart");
 const exportButton = document.getElementById("export-button");
 const importInput = document.getElementById("import-input");
+const runFormHeading = document.getElementById("run-form-heading");
+const submitButton = document.getElementById("submit-button");
+const cancelEditButton = document.getElementById("cancel-edit-button");
 
 const runs = [];
+
+// A slider always has a value, so we remember whether the user really chose one.
+let painWasChosen = false;
+// Position of the run that is being edited, or null when a new run is entered.
+let editingIndex = null;
 
 // Returns the color category for a pain score.
 function getPainCategory(painLevel) {
@@ -30,19 +38,39 @@ function getPainCategory(painLevel) {
   return { label: "Rot", color: "red" };
 }
 
-// Updates the color preview when the pain score changes.
+// Updates the color preview and the slider color when the pain score changes.
 function updatePainIndicator() {
-  const painLevel = Number(painInput.value);
+  painInput.classList.remove("green", "yellow", "red");
 
-  if (painInput.value === "" || painLevel < 1 || painLevel > 10 || !Number.isInteger(painLevel)) {
+  if (!painWasChosen) {
     painIndicator.className = "pain-indicator neutral";
-    painIndicator.textContent = "Schmerzfarbe wird nach Eingabe angezeigt.";
+    painIndicator.textContent = "Schiebe den Regler, um den Schmerz-Wert zu wählen.";
     return;
   }
 
+  const painLevel = Number(painInput.value);
   const category = getPainCategory(painLevel);
+  painInput.classList.add(category.color);
   painIndicator.className = "pain-indicator " + category.color;
   painIndicator.textContent = painLevel + "/10 – " + category.label;
+}
+
+// Marks the pain slider as chosen, so the form can be saved.
+function choosePain() {
+  painWasChosen = true;
+  painInput.setCustomValidity("");
+  painInput.classList.remove("untouched");
+  updatePainIndicator();
+}
+
+// Sets the pain slider back to "not chosen yet". The form cannot be saved like this,
+// because the pain value is a required field.
+function resetPainChoice() {
+  painWasChosen = false;
+  painInput.value = "5";
+  painInput.setCustomValidity("Bitte wähle mit dem Regler einen Schmerz-Wert.");
+  painInput.classList.add("untouched");
+  updatePainIndicator();
 }
 
 // Turns a date value like "2026-11-21" into a local Date object.
@@ -133,13 +161,45 @@ function showAllSections() {
   showCharts();
 }
 
+// Keeps a copy of broken saved data and tells the user about it.
+function backupBrokenData(savedText) {
+  localStorage.setItem("runs-backup", savedText);
+  alert("Gespeicherte Läufe waren ganz oder teilweise beschädigt und werden nicht angezeigt. " +
+    "Eine Kopie der ursprünglichen Daten liegt im Browser-Speicher unter „runs-backup“.");
+}
+
+// Reads the saved runs. Broken data is skipped, so the page still works.
+function readRunsFromStorage(savedText) {
+  let parsedRuns = null;
+  try {
+    parsedRuns = JSON.parse(savedText);
+  } catch (error) {
+    parsedRuns = null;
+  }
+
+  if (!Array.isArray(parsedRuns)) {
+    backupBrokenData(savedText);
+    return [];
+  }
+
+  const validRuns = [];
+  for (const run of parsedRuns) {
+    if (isValidRun(run)) {
+      validRuns.push(run);
+    }
+  }
+  if (validRuns.length < parsedRuns.length) {
+    backupBrokenData(savedText);
+  }
+  return validRuns;
+}
+
 // Loads saved runs and refreshes the page sections.
 function loadRuns() {
   const savedRuns = localStorage.getItem("runs");
 
   if (savedRuns !== null) {
-    const parsedRuns = JSON.parse(savedRuns);
-    for (const run of parsedRuns) {
+    for (const run of readRunsFromStorage(savedRuns)) {
       runs.push(run);
     }
   }
@@ -158,25 +218,63 @@ function deleteRun(runIndex) {
     return;
   }
 
+  // Positions in the list change after deleting, so an open edit is closed first.
+  stopEditing();
   runs.splice(runIndex, 1);
   saveRuns();
   showAllSections();
 }
 
-// Creates the delete button for the run at the given position.
-// The aria-label tells screen reader users which run will be deleted.
-function createDeleteButton(runIndex) {
+// Puts a run into the form, so it can be changed and saved again.
+function startEditing(runIndex) {
   const run = runs[runIndex];
-  const deleteButton = document.createElement("button");
-  deleteButton.type = "button";
-  deleteButton.className = "delete-button";
-  deleteButton.textContent = "Löschen";
-  deleteButton.setAttribute("aria-label", "Lauf vom " + formatDate(run.date) +
-    " um " + run.time + " löschen");
-  deleteButton.addEventListener("click", function () {
-    deleteRun(runIndex);
+  editingIndex = runIndex;
+  runDateInput.value = run.date;
+  runTimeInput.value = run.time;
+  distanceInput.value = run.kilometers;
+  noteInput.value = run.note || "";
+  painInput.value = run.pain;
+  choosePain();
+
+  runFormHeading.textContent = "Lauf bearbeiten";
+  submitButton.textContent = "Änderung speichern";
+  cancelEditButton.hidden = false;
+  showRunHistory();
+  runFormHeading.scrollIntoView({ behavior: "smooth", block: "start" });
+  distanceInput.focus({ preventScroll: true });
+}
+
+// Leaves edit mode and prepares the form for a new run.
+function stopEditing() {
+  editingIndex = null;
+  runFormHeading.textContent = "Lauf eintragen";
+  submitButton.textContent = "Lauf speichern";
+  cancelEditButton.hidden = true;
+  runForm.reset();
+  setCurrentDateAndTime();
+  resetPainChoice();
+}
+
+// Cancels editing without saving and removes the highlight in the list.
+function cancelEditing() {
+  stopEditing();
+  showRunHistory();
+}
+
+// Creates a small button for one run, for example "Bearbeiten" or "Löschen".
+// The aria-label tells screen reader users which run the button belongs to.
+function createRunButton(label, className, runIndex, action) {
+  const run = runs[runIndex];
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = className;
+  button.textContent = label;
+  button.setAttribute("aria-label", "Lauf vom " + formatDate(run.date) +
+    " um " + run.time + " " + label.toLowerCase());
+  button.addEventListener("click", function () {
+    action(runIndex);
   });
-  return deleteButton;
+  return button;
 }
 
 // Creates the date, distance and (if present) note text for a run.
@@ -196,18 +294,26 @@ function createRunDetails(run) {
   return runDetails;
 }
 
-// Creates one history item for a run.
+// Creates one history item for a run. The run that is being edited is highlighted.
 function createRunItem(run, runIndex) {
   const listItem = document.createElement("li");
   const category = getPainCategory(run.pain);
   const painBadge = document.createElement("span");
   const itemActions = document.createElement("span");
+  const runButtons = document.createElement("span");
 
+  if (runIndex === editingIndex) {
+    listItem.className = "editing";
+  }
   painBadge.className = "pain-badge " + category.color;
   painBadge.textContent = "Schmerzen: " + run.pain + "/10 (" + category.label + ")";
+  // The two buttons are grouped, so they always stay next to each other.
+  runButtons.className = "run-buttons";
+  runButtons.appendChild(createRunButton("Bearbeiten", "edit-button", runIndex, startEditing));
+  runButtons.appendChild(createRunButton("Löschen", "delete-button", runIndex, deleteRun));
   itemActions.className = "run-actions";
   itemActions.appendChild(painBadge);
-  itemActions.appendChild(createDeleteButton(runIndex));
+  itemActions.appendChild(runButtons);
   listItem.appendChild(createRunDetails(run));
   listItem.appendChild(itemActions);
   return listItem;
@@ -576,8 +682,8 @@ function showCharts() {
   showPainChart();
 }
 
-// Adds a valid run to the history and saves it.
-function addRun(event) {
+// Saves the form: adds a new run, or replaces the run that is being edited.
+function saveRunFromForm(event) {
   event.preventDefault();
 
   if (!runForm.checkValidity()) {
@@ -585,20 +691,24 @@ function addRun(event) {
     return;
   }
 
-  runs.push({
+  const run = {
     date: runDateInput.value,
     time: runTimeInput.value,
     kilometers: Number(distanceInput.value),
     pain: Number(painInput.value),
     note: noteInput.value.trim()
-  });
+  };
+
+  if (editingIndex === null) {
+    runs.push(run);
+  } else {
+    runs[editingIndex] = run;
+  }
 
   sortRuns();
   saveRuns();
+  stopEditing();
   showAllSections();
-  runForm.reset();
-  setCurrentDateAndTime();
-  updatePainIndicator();
 }
 
 // Downloads all runs as a JSON file.
@@ -659,6 +769,7 @@ function readRunsFromText(fileText) {
 
 // Replaces all current runs with the imported runs and saves them.
 function replaceRuns(importedRuns) {
+  stopEditing();
   runs.length = 0;
 
   for (const run of importedRuns) {
@@ -705,10 +816,13 @@ function importRuns() {
   importInput.value = "";
 }
 
-runForm.addEventListener("submit", addRun);
-painInput.addEventListener("input", updatePainIndicator);
+runForm.addEventListener("submit", saveRunFromForm);
+// Moving the slider or just clicking/tapping it counts as choosing a value.
+painInput.addEventListener("input", choosePain);
+painInput.addEventListener("pointerdown", choosePain);
+cancelEditButton.addEventListener("click", cancelEditing);
 exportButton.addEventListener("click", exportRuns);
 importInput.addEventListener("change", importRuns);
 setCurrentDateAndTime();
-updatePainIndicator();
+resetPainChoice();
 loadRuns();
