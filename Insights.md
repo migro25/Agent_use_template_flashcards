@@ -31,6 +31,20 @@
 - Prozentveränderung: (diese Woche − Vorwoche) / Vorwoche × 100. Durch 0
   teilen muss man abfangen.
 
+## Step 6 – Schmerz-Schieberegler
+
+### What was new to me
+- Ein Schieberegler (`<input type="range">`) ist cool und richtig nützlich:
+  Man wählt den Schmerz-Wert mit einem Wisch statt eine Zahl zu tippen. Das geht
+  am Handy viel schneller, und durch die Live-Farbe (grün/gelb/rot) sieht man
+  sofort, wo man steht.
+- Mit `accent-color` in CSS kann man die Farbe des Reglers ganz einfach ändern.
+
+### New things I did learn
+- Ein Regler hat immer einen Wert, er kann nicht „leer“ sein. Damit er trotzdem
+  ein Pflichtfeld ist, merkt man sich, ob er berührt wurde, und blockiert vorher
+  das Speichern mit `setCustomValidity`.
+
 ## Arbeiten mit KI
 - Die Regeln in `AGENTS.md` (einfacher Code, nur das Verlangte umsetzen)
   haben gut funktioniert: Die KI hat erst Ideen vorgeschlagen und erst nach
